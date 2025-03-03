@@ -8,10 +8,10 @@ import {
   updateEvent,
   deleteEvent,
 } from "../api/eventApi";
-import Calendar from "../components/Calender.jsx";
-import EventAddPopup from "../components/EventAppPopup.jsx";
-import EventDetailsModal from "../components/EventDetailsModal.jsx";
-import Sidebar from "../components/Common/Sidebar.jsx";
+import Calendar from "../components/Calender";
+import EventAddPopup from "../components/EventAppPopup";
+import EventDetailsModal from "../components/EventDetailsModal";
+import Sidebar from "../components/Common/Sidebar";
 
 const Dashboard = () => {
   const [events, setEvents] = useState([]);
@@ -90,7 +90,6 @@ const Dashboard = () => {
       <div className="flex-1 lg:pl-64">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Section */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -193,7 +192,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Right Section */}
             <div className="lg:col-span-3 space-y-6">
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center space-x-4 mb-6">

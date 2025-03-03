@@ -1,14 +1,18 @@
 // frontend/src/components/GroupRoom.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Users, Video, Upload, MessageSquare } from "lucide-react";
+import { Users, Settings } from "lucide-react";
 import {
   fetchUserGroups,
   removeMember,
   blockMember,
+  updateMemberRole,
   getGroupMembers,
 } from "../api/groupApi";
 import Sidebar from "./Common/Sidebar";
+import ChatBox from "./ChatBox";
+import VideoConference from "./VideoConference";
+import StudyResources from "./StudyResources";
 
 const GroupRoom = () => {
   const { id } = useParams();
@@ -46,7 +50,7 @@ const GroupRoom = () => {
       try {
         const updatedGroup = await removeMember(group.groupId, memberId);
         setGroup(updatedGroup);
-        setMembers(members.filter((m) => m._id !== memberId));
+        setMembers(members.filter((m) => m.userId._id !== memberId));
       } catch (error) {
         console.error("Failed to remove member:", error);
       }
@@ -58,10 +62,24 @@ const GroupRoom = () => {
       try {
         const updatedGroup = await blockMember(group.groupId, memberId);
         setGroup(updatedGroup);
-        setMembers(members.filter((m) => m._id !== memberId));
+        setMembers(members.filter((m) => m.userId._id !== memberId));
       } catch (error) {
         console.error("Failed to block member:", error);
       }
+    }
+  };
+
+  const handleRoleChange = async (memberId, role) => {
+    try {
+      const updatedGroup = await updateMemberRole(
+        group.groupId,
+        memberId,
+        role
+      );
+      setGroup(updatedGroup);
+      setMembers(updatedGroup.members);
+    } catch (error) {
+      console.error("Failed to update role:", error);
     }
   };
 
@@ -85,69 +103,34 @@ const GroupRoom = () => {
                   Group ID: {group?.groupId || id}
                 </p>
               </div>
-              <button
-                onClick={() => setShowMembers(true)}
-                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-              >
-                <Users className="h-5 w-5 mr-2" />
-                View Members
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowMembers(true)}
+                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  <Users className="h-5 w-5 mr-2" />
+                  View Members
+                </button>
+                {group?.host === currentUser.id && (
+                  <button
+                    onClick={() => navigate("/groups")} // Placeholder for settings
+                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  >
+                    <Settings className="h-5 w-5 mr-2" />
+                    Settings
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Video Conference
-                  </h2>
-                  <button className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                    <Video className="h-5 w-5 mr-2" />
-                    Join Call
-                  </button>
-                </div>
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Video call will appear here</p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Discussion
-                  </h2>
-                  <button className="text-indigo-600 hover:text-indigo-700">
-                    <MessageSquare className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="h-96 bg-gray-50 rounded-lg p-4 overflow-y-auto">
-                  <p className="text-gray-500 text-center">No messages yet</p>
-                </div>
-                <div className="mt-4">
-                  <input
-                    type="text"
-                    placeholder="Type your message..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
+              <VideoConference groupId={id} />
+              <ChatBox groupId={id} currentUserId={currentUser.id} />
             </div>
-
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Resources
-                  </h2>
-                  <button className="text-indigo-600 hover:text-indigo-700">
-                    <Upload className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-gray-500">No resources shared yet</p>
-                </div>
-              </div>
+              <StudyResources groupId={id} currentUserId={currentUser.id} />
             </div>
           </div>
 
@@ -168,30 +151,52 @@ const GroupRoom = () => {
                 <div className="space-y-4">
                   {members.map((member) => (
                     <div
-                      key={member._id}
+                      key={member.userId._id}
                       className="flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-3">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            member.name
+                            member.userId.name
                           )}`}
-                          alt={member.name}
+                          alt={member.userId.name}
                           className="h-10 w-10 rounded-full"
                         />
-                        <span className="text-gray-900">{member.name}</span>
+                        <div>
+                          <span className="text-gray-900">
+                            {member.userId.name}
+                          </span>
+                          <p className="text-sm text-gray-500">{member.role}</p>
+                        </div>
                       </div>
                       {group.host === currentUser.id &&
-                        member._id !== currentUser.id && (
+                        member.userId._id !== currentUser.id && (
                           <div className="flex space-x-2">
+                            <select
+                              value={member.role}
+                              onChange={(e) =>
+                                handleRoleChange(
+                                  member.userId._id,
+                                  e.target.value
+                                )
+                              }
+                              className="text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="moderator">Moderator</option>
+                              <option value="member">Member</option>
+                            </select>
                             <button
-                              onClick={() => handleRemoveMember(member._id)}
+                              onClick={() =>
+                                handleRemoveMember(member.userId._id)
+                              }
                               className="text-sm text-orange-600 hover:text-orange-700"
                             >
                               Remove
                             </button>
                             <button
-                              onClick={() => handleBlockMember(member._id)}
+                              onClick={() =>
+                                handleBlockMember(member.userId._id)
+                              }
                               className="text-sm text-red-600 hover:text-red-700"
                             >
                               Block

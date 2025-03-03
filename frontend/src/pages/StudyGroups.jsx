@@ -1,12 +1,14 @@
 // frontend/src/pages/StudyGroups.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Users, Lock, Globe } from "lucide-react";
+import { Plus, Search, Users, Lock, Globe, Edit, Trash2 } from "lucide-react";
 import {
   fetchUserGroups,
   fetchPublicGroups,
   createGroup,
   joinGroup,
+  editGroup,
+  deleteGroup,
 } from "../api/groupApi";
 import Sidebar from "../components/Common/Sidebar";
 import CreateGroupModal from "../components/CreateGroupModal";
@@ -17,6 +19,8 @@ const StudyGroups = () => {
   const [publicGroups, setPublicGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editGroupData, setEditGroupData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [groupIdToJoin, setGroupIdToJoin] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -48,6 +52,36 @@ const StudyGroups = () => {
       if (groupData.isPublic) setPublicGroups([...publicGroups, newGroup]);
     } catch (error) {
       console.error("Failed to create group:", error);
+    }
+  };
+
+  const handleEditGroup = async (groupData) => {
+    try {
+      const updatedGroup = await editGroup({
+        groupId: editGroupData.groupId,
+        ...groupData,
+      });
+      setUserGroups(
+        userGroups.map((g) => (g._id === updatedGroup._id ? updatedGroup : g))
+      );
+      setPublicGroups(
+        publicGroups.map((g) => (g._id === updatedGroup._id ? updatedGroup : g))
+      );
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to edit group:", error);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    if (window.confirm("Are you sure you want to delete this group?")) {
+      try {
+        await deleteGroup(groupId);
+        setUserGroups(userGroups.filter((g) => g.groupId !== groupId));
+        setPublicGroups(publicGroups.filter((g) => g.groupId !== groupId));
+      } catch (error) {
+        console.error("Failed to delete group:", error);
+      }
     }
   };
 
@@ -118,11 +152,13 @@ const StudyGroups = () => {
                   {userGroups.map((group) => (
                     <div
                       key={group._id}
-                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/group/${group._id}`)}
+                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between">
-                        <div>
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => navigate(`/group/${group._id}`)}
+                        >
                           <h3 className="font-semibold text-gray-900">
                             {group.name}
                           </h3>
@@ -140,6 +176,25 @@ const StudyGroups = () => {
                             </div>
                           </div>
                         </div>
+                        {group.host === userId && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setEditGroupData(group);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteGroup(group.groupId)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-full"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
                         {!group.isPublic && (
                           <Lock className="h-5 w-5 text-gray-400" />
                         )}
@@ -240,6 +295,12 @@ const StudyGroups = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateGroup}
+      />
+      <CreateGroupModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditGroup}
+        initialData={editGroupData}
       />
     </div>
   );

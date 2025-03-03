@@ -1,20 +1,33 @@
 // frontend/src/components/CreateGroupModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-const CreateGroupModal = ({ isOpen, onClose, onSubmit }) => {
+const CreateGroupModal = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     isPublic: true,
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        isPublic:
+          initialData.isPublic !== undefined ? initialData.isPublic : true,
+      });
+    }
+  }, [initialData]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ name: "", description: "", isPublic: true });
+    if (!initialData) {
+      setFormData({ name: "", description: "", isPublic: true });
+    }
     onClose();
   };
 
@@ -23,7 +36,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSubmit }) => {
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            Create Study Group
+            {initialData ? "Edit Study Group" : "Create Study Group"}
           </h2>
           <button
             onClick={onClose}
@@ -109,7 +122,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSubmit }) => {
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
             >
-              Create Group
+              {initialData ? "Save Changes" : "Create Group"}
             </button>
           </div>
         </form>

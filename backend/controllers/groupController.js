@@ -5,7 +5,10 @@ const User = require("../models/User");
 const fetchUserGroups = async (req, res) => {
   try {
     const userId = req.user.id;
-    const groups = await Group.find({ members: userId });
+    const groups = await Group.find({ "members.userId": userId }).populate(
+      "members.userId",
+      "name email"
+    );
     res.json(groups);
   } catch (error) {
     console.error("Fetch User Groups Error:", error);
@@ -17,7 +20,10 @@ const fetchUserGroups = async (req, res) => {
 
 const fetchPublicGroups = async (req, res) => {
   try {
-    const groups = await Group.find({ isPublic: true });
+    const groups = await Group.find({ isPublic: true }).populate(
+      "members.userId",
+      "name email"
+    );
     res.json(groups);
   } catch (error) {
     console.error("Fetch Public Groups Error:", error);
@@ -37,7 +43,7 @@ const createGroup = async (req, res) => {
       description,
       isPublic,
       groupId,
-      members: [userId],
+      members: [{ userId, role: "host" }],
       host: userId,
     });
     await group.save();
@@ -47,6 +53,48 @@ const createGroup = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error creating group", error: error.message });
+  }
+};
+
+const editGroup = async (req, res) => {
+  const { groupId, name, description, isPublic } = req.body;
+  try {
+    const userId = req.user.id;
+    const group = await Group.findOne({ groupId, host: userId });
+    if (!group)
+      return res
+        .status(403)
+        .json({ message: "Only the host can edit the group" });
+
+    if (name) group.name = name;
+    if (description) group.description = description;
+    if (typeof isPublic !== "undefined") group.isPublic = isPublic;
+
+    await group.save();
+    res.json(group);
+  } catch (error) {
+    console.error("Edit Group Error:", error);
+    res
+      .status(500)
+      .json({ message: "Error editing group", error: error.message });
+  }
+};
+
+const deleteGroup = async (req, res) => {
+  const { groupId } = req.params;
+  try {
+    const userId = req.user.id;
+    const group = await Group.findOneAndDelete({ groupId, host: userId });
+    if (!group)
+      return res
+        .status(403)
+        .json({ message: "Only the host can delete the group" });
+    res.json({ message: "Group deleted successfully" });
+  } catch (error) {
+    console.error("Delete Group Error:", error);
+    res
+      .status(500)
+      .json({ message: "Error deleting group", error: error.message });
   }
 };
 
@@ -60,13 +108,13 @@ const joinGroup = async (req, res) => {
       return res
         .status(403)
         .json({ message: "You are blocked from this group" });
-    if (group.members.includes(userId))
+    if (group.members.some((m) => m.userId.toString() === userId))
       return res.status(400).json({ message: "Already a member" });
     if (!group.isPublic && !groupId)
       return res
         .status(403)
         .json({ message: "Group ID required for private group" });
-    group.members.push(userId);
+    group.members.push({ userId, role: "member" });
     await group.save();
     res.json(group);
   } catch (error) {
@@ -81,12 +129,21 @@ const removeMember = async (req, res) => {
   const { groupId, memberId } = req.body;
   try {
     const userId = req.user.id;
-    const group = await Group.findOne({ groupId, host: userId });
-    if (!group)
+    const group = await Group.findOne({ groupId });
+    if (!group) return res.status(404).json({ message: "Group not found" });
+    if (
+      group.host.toString() !== userId &&
+      !group.members.some(
+        (m) => m.userId.toString() === userId && m.role === "moderator"
+      )
+    ) {
       return res
         .status(403)
-        .json({ message: "Only the host can remove members" });
-    group.members = group.members.filter((id) => id.toString() !== memberId);
+        .json({ message: "Only host or moderators can remove members" });
+    }
+    group.members = group.members.filter(
+      (m) => m.userId.toString() !== memberId
+    );
     await group.save();
     res.json(group);
   } catch (error) {
@@ -101,12 +158,21 @@ const blockMember = async (req, res) => {
   const { groupId, memberId } = req.body;
   try {
     const userId = req.user.id;
-    const group = await Group.findOne({ groupId, host: userId });
-    if (!group)
+    const group = await Group.findOne({ groupId });
+    if (!group) return res.status(404).json({ message: "Group not found" });
+    if (
+      group.host.toString() !== userId &&
+      !group.members.some(
+        (m) => m.userId.toString() === userId && m.role === "moderator"
+      )
+    ) {
       return res
         .status(403)
-        .json({ message: "Only the host can block members" });
-    group.members = group.members.filter((id) => id.toString() !== memberId);
+        .json({ message: "Only host or moderators can block members" });
+    }
+    group.members = group.members.filter(
+      (m) => m.userId.toString() !== memberId
+    );
     if (!group.blockedMembers.includes(memberId))
       group.blockedMembers.push(memberId);
     await group.save();
@@ -119,11 +185,36 @@ const blockMember = async (req, res) => {
   }
 };
 
+const updateMemberRole = async (req, res) => {
+  const { groupId, memberId, role } = req.body;
+  try {
+    const userId = req.user.id;
+    const group = await Group.findOne({ groupId, host: userId });
+    if (!group)
+      return res
+        .status(403)
+        .json({ message: "Only the host can update member roles" });
+
+    const member = group.members.find((m) => m.userId.toString() === memberId);
+    if (!member)
+      return res.status(404).json({ message: "Member not found in group" });
+    if (role && ["moderator", "member"].includes(role)) member.role = role;
+
+    await group.save();
+    res.json(group);
+  } catch (error) {
+    console.error("Update Member Role Error:", error);
+    res
+      .status(500)
+      .json({ message: "Error updating member role", error: error.message });
+  }
+};
+
 const getGroupMembers = async (req, res) => {
   const { groupId } = req.params;
   try {
     const group = await Group.findOne({ _id: groupId }).populate(
-      "members",
+      "members.userId",
       "name email"
     );
     if (!group) return res.status(404).json({ message: "Group not found" });
@@ -140,8 +231,11 @@ module.exports = {
   fetchUserGroups,
   fetchPublicGroups,
   createGroup,
+  editGroup,
+  deleteGroup,
   joinGroup,
   removeMember,
   blockMember,
+  updateMemberRole,
   getGroupMembers,
 };

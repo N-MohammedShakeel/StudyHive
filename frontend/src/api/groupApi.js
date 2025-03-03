@@ -38,6 +38,32 @@ export const createGroup = async (groupData) => {
   return data;
 };
 
+export const editGroup = async (groupData) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(API_URL, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(groupData),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to edit group");
+  return data;
+};
+
+export const deleteGroup = async (groupId) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/${groupId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to delete group");
+  return data;
+};
+
 export const joinGroup = async (groupId) => {
   const token = localStorage.getItem("token");
   const response = await fetch(`${API_URL}/join`, {
@@ -80,6 +106,22 @@ export const blockMember = async (groupId, memberId) => {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || "Failed to block member");
+  return data;
+};
+
+export const updateMemberRole = async (groupId, memberId, role) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/role`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ groupId, memberId, role }),
+  });
+  const data = await response.json();
+  if (!response.ok)
+    throw new Error(data.message || "Failed to update member role");
   return data;
 };
 
