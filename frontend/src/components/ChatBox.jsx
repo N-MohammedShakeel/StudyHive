@@ -87,7 +87,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
 
   const handleReactToMessage = async (messageId) => {
     try {
-      const reaction = "like"; // Simple like for now
+      const reaction = "like";
       const data = await reactToMessage(messageId, reaction);
       socket.emit("reactToMessage", { groupId, ...data });
     } catch (error) {
@@ -119,8 +119,10 @@ const ChatBox = ({ groupId, currentUserId }) => {
                     : "bg-gray-200 text-gray-900"
                 }`}
               >
-                <p className="text-sm font-medium">{message.userId.name}</p>
                 <p className="text-sm">{message.content}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {message.userId.name}
+                </p>
                 <div className="flex items-center space-x-2 mt-1">
                   {message.reactions.length > 0 && (
                     <span className="text-xs text-gray-500">

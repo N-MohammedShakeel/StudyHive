@@ -1,6 +1,6 @@
 // backend/controllers/fileController.js
 const File = require("../models/File");
-const { drive, oauth2Client } = require("../config/googleDrive");
+const { drive, STUDYHIVE_FOLDER_ID } = require("../config/googleDrive");
 const stream = require("stream");
 
 const getFiles = async (req, res) => {
@@ -17,17 +17,16 @@ const getFiles = async (req, res) => {
 };
 
 const uploadFile = async (req, res) => {
-  const { groupId, fileName, fileData, accessToken } = req.body; // Assume fileData is base64
+  const { groupId, fileName, fileData } = req.body; // fileData is base64
   try {
     const userId = req.user.id;
-    oauth2Client.setCredentials({ access_token: accessToken });
 
     const bufferStream = new stream.PassThrough();
     bufferStream.end(Buffer.from(fileData, "base64"));
 
     const fileMetadata = {
       name: fileName,
-      parents: ["root"], // Store in root for simplicity; can create group folders later
+      parents: [STUDYHIVE_FOLDER_ID],
     };
     const media = {
       mimeType: "application/octet-stream",
@@ -60,7 +59,6 @@ const uploadFile = async (req, res) => {
 
 const deleteFile = async (req, res) => {
   const { fileId } = req.params;
-  const { accessToken } = req.body;
   try {
     const userId = req.user.id;
     const file = await File.findOne({ _id: fileId, userId });
@@ -69,10 +67,9 @@ const deleteFile = async (req, res) => {
         .status(403)
         .json({ message: "You can only delete your own files" });
 
-    oauth2Client.setCredentials({ access_token: accessToken });
     await drive.files.delete({ fileId: file.driveFileId });
-
     await File.deleteOne({ _id: fileId });
+
     res.json({ message: "File deleted successfully", fileId });
   } catch (error) {
     console.error("Delete File Error:", error);

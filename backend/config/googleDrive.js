@@ -1,13 +1,15 @@
 // backend/config/googleDrive.js
 const { google } = require("googleapis");
-const { OAuth2 } = google.auth;
+const { JWT } = google.auth;
 
-const oauth2Client = new OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  "http://localhost:5000/api/auth/google/callback" // Same as auth redirect
-);
+const jwtClient = new JWT({
+  email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  scopes: ["https://www.googleapis.com/auth/drive"],
+});
 
-const drive = google.drive({ version: "v3", auth: oauth2Client });
+const drive = google.drive({ version: "v3", auth: jwtClient });
 
-module.exports = { oauth2Client, drive };
+const STUDYHIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+module.exports = { drive, STUDYHIVE_FOLDER_ID };

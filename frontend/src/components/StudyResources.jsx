@@ -6,7 +6,7 @@ import { getFiles, uploadFile, deleteFile } from "../api/fileApi";
 const StudyResources = ({ groupId, currentUserId }) => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [accessToken] = useState(localStorage.getItem("token")); // Use Google access token from auth
+  const [error, setError] = useState(""); // Add error state
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -15,6 +15,7 @@ const StudyResources = ({ groupId, currentUserId }) => {
         setFiles(fetchedFiles);
       } catch (error) {
         console.error("Failed to load files:", error);
+        setError(error.message);
       }
     };
     loadFiles();
@@ -25,11 +26,13 @@ const StudyResources = ({ groupId, currentUserId }) => {
     if (!file) return;
 
     setUploading(true);
+    setError(""); // Clear previous errors
     try {
-      const uploadedFile = await uploadFile(groupId, file, accessToken);
+      const uploadedFile = await uploadFile(groupId, file);
       setFiles((prev) => [...prev, uploadedFile]);
     } catch (error) {
       console.error("Failed to upload file:", error);
+      setError(error.message); // Display error to user
     } finally {
       setUploading(false);
     }
@@ -38,10 +41,11 @@ const StudyResources = ({ groupId, currentUserId }) => {
   const handleDeleteFile = async (fileId, fileName) => {
     if (window.confirm("Are you sure you want to delete this file?")) {
       try {
-        await deleteFile(fileId, accessToken);
+        await deleteFile(fileId);
         setFiles((prev) => prev.filter((f) => f._id !== fileId));
       } catch (error) {
         console.error("Failed to delete file:", error);
+        setError(error.message);
       }
     }
   };
@@ -60,6 +64,11 @@ const StudyResources = ({ groupId, currentUserId }) => {
           />
         </label>
       </div>
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+          {error}
+        </div>
+      )}
       <div className="space-y-2">
         {files.length > 0 ? (
           files.map((file) => (

@@ -26,10 +26,3 @@ export const login = async (credentials) => {
 export const googleLogin = () => {
   window.location.href = `${API_URL}/google`;
 };
-
-// Store Google token after redirect
-export const handleGoogleCallback = (token, user, accessToken) => {
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(user));
-  localStorage.setItem("googleAccessToken", accessToken); // Store Google token
-};

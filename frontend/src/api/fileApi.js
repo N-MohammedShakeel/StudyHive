@@ -11,7 +11,7 @@ export const getFiles = async (groupId) => {
   return data;
 };
 
-export const uploadFile = async (groupId, file, accessToken) => {
+export const uploadFile = async (groupId, file) => {
   const token = localStorage.getItem("token");
   const fileReader = new FileReader();
   return new Promise((resolve, reject) => {
@@ -25,16 +25,20 @@ export const uploadFile = async (groupId, file, accessToken) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            groupId,
-            fileName: file.name,
-            fileData,
-            accessToken,
-          }),
+          body: JSON.stringify({ groupId, fileName: file.name, fileData }),
         });
+        if (!response.ok) {
+          const text = await response.text(); // Get raw response
+          try {
+            const data = JSON.parse(text);
+            throw new Error(
+              data.message || `Upload failed with status ${response.status}`
+            );
+          } catch {
+            throw new Error(`Upload failed: ${text}`);
+          }
+        }
         const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.message || "Failed to upload file");
         resolve(data);
       } catch (error) {
         reject(error);
@@ -45,15 +49,11 @@ export const uploadFile = async (groupId, file, accessToken) => {
   });
 };
 
-export const deleteFile = async (fileId, accessToken) => {
+export const deleteFile = async (fileId) => {
   const token = localStorage.getItem("token");
   const response = await fetch(`${API_URL}/${fileId}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ accessToken }),
+    headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || "Failed to delete file");
