@@ -11,7 +11,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 router.get("/", authMiddleware, getEvents);
 router.post("/", authMiddleware, createEvent);
-router.put("/:id", authMiddleware, updateEvent); // New
-router.delete("/:id", authMiddleware, deleteEvent); // New
+router.put("/:id", authMiddleware, updateEvent);
+router.delete("/:id", authMiddleware, deleteEvent);
 
 module.exports = router;

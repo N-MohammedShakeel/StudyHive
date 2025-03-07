@@ -56,7 +56,6 @@ const login = async (req, res) => {
   }
 };
 
-// backend/controllers/authController.js (Snippet)
 const googleCallback = (req, res) => {
   const user = req.user;
   const token = generateToken(user);

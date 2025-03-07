@@ -103,7 +103,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
                   {user?.name || "User"}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {user?.email || "email@example.com"}
+                  {user?.email?.length > 10
+                    ? user.email.substring(0, 10) + "..."
+                    : user?.email || "email@example.com"}
                 </p>
               </div>
             </Link>

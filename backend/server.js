@@ -12,7 +12,7 @@ const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const fileRoutes = require("./routes/fileRoutes");
 const meetingRoutes = require("./routes/meetingRoutes");
-const aiRoutes = require("./routes/aiRoutes"); // New
+const aiRoutes = require("./routes/aiRoutes");
 const passport = require("./config/authConfig");
 
 const app = express();
@@ -32,7 +32,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/meetings", meetingRoutes);
-app.use("/api/ai", aiRoutes); // New
+app.use("/api/ai", aiRoutes);
 
 connectDB();
 
