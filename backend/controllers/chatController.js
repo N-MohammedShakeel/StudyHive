@@ -1,5 +1,5 @@
 // backend/controllers/chatController.js
-const Message = require("../models/Message");
+const Message = require("../models/Chat");
 
 const getMessages = async (req, res) => {
   const { groupId } = req.params;
