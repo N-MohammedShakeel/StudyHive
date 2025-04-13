@@ -155,9 +155,9 @@ const Courses = () => {
                       <h3 className="font-semibold text-gray-900 text-lg">
                         {course.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      {/* <p className="text-sm text-gray-500">
                         By {course.author.name}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2">
@@ -193,7 +193,7 @@ const Courses = () => {
                         Resource
                       </a>
                     )}
-                    {course.author._id === user.id && (
+                    {course.author === user.id && (
                       <>
                         <button
                           onClick={() => {

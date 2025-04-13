@@ -43,7 +43,7 @@ const createGroup = async (req, res) => {
       description,
       isPublic,
       groupId,
-      members: [{ userId, role: "host" }],
+      members: [{ userId, username: "me", role: "host" }],
       host: userId,
     });
     await group.save();
@@ -102,6 +102,7 @@ const joinGroup = async (req, res) => {
   const { groupId } = req.body;
   try {
     const userId = req.user.id;
+    const username = req.user.name;
     const group = await Group.findOne({ groupId });
     if (!group) return res.status(404).json({ message: "Group not found" });
     if (group.blockedMembers.includes(userId))
@@ -114,7 +115,7 @@ const joinGroup = async (req, res) => {
       return res
         .status(403)
         .json({ message: "Group ID required for private group" });
-    group.members.push({ userId, role: "member" });
+    group.members.push({ userId, username, role: "member" });
     await group.save();
     res.json(group);
   } catch (error) {

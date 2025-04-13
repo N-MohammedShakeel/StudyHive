@@ -154,34 +154,31 @@ const GroupRoom = () => {
                 <div className="space-y-4">
                   {members.map((member) => (
                     <div
-                      key={member.userId._id}
+                      key={member.userId}
                       className="flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-3">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            member.userId.name
+                            member.username
                           )}`}
-                          alt={member.userId.name}
+                          alt={member.username}
                           className="h-10 w-10 rounded-full"
                         />
                         <div>
                           <span className="text-gray-900">
-                            {member.userId.name}
+                            {member.username}
                           </span>
                           <p className="text-sm text-gray-500">{member.role}</p>
                         </div>
                       </div>
                       {group.host === currentUser.id &&
-                        member.userId._id !== currentUser.id && (
+                        member.userId !== currentUser.id && (
                           <div className="flex space-x-2">
                             <select
                               value={member.role}
                               onChange={(e) =>
-                                handleRoleChange(
-                                  member.userId._id,
-                                  e.target.value
-                                )
+                                handleRoleChange(member.userId, e.target.value)
                               }
                               className="text-sm border-gray-300 rounded-md"
                             >
