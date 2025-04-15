@@ -37,13 +37,15 @@ const createGroup = async (req, res) => {
   const { name, description, isPublic } = req.body;
   try {
     const userId = req.user.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
     const groupId = Math.random().toString(36).substring(2, 10);
     const group = new Group({
       name,
       description,
       isPublic,
       groupId,
-      members: [{ userId, username: "me", role: "host" }],
+      members: [{ userId, username: user.name, role: "host" }],
       host: userId,
     });
     await group.save();
@@ -219,7 +221,16 @@ const getGroupMembers = async (req, res) => {
       "name email"
     );
     if (!group) return res.status(404).json({ message: "Group not found" });
-    res.json(group.members);
+
+    const validMembers = group.members.filter((member) => {
+      if (!member.userId) {
+        console.warn(`Invalid userId in group ${groupId}, member:`, member);
+        return false;
+      }
+      return true;
+    });
+
+    res.json(validMembers);
   } catch (error) {
     console.error("Get Group Members Error:", error);
     res

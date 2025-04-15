@@ -1,4 +1,3 @@
-// frontend/src/pages/Profile.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,12 +11,15 @@ import {
 } from "lucide-react";
 import {
   updateProfile,
+  addPassword,
   changePassword,
   deleteAccount,
   getUserProfile,
 } from "../api/userApi";
 import Sidebar from "../components/Common/Sidebar";
 import AIModal from "../components/AIModal";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,6 +39,7 @@ const Profile = () => {
     confirmNewPassword: "",
   });
   const [error, setError] = useState("");
+  const [errorTimeout, setErrorTimeout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
@@ -61,12 +65,12 @@ const Profile = () => {
         const userData = await getUserProfile();
         setUser(userData);
         setFormData({
-          name: userData.name,
-          email: userData.email,
+          name: userData.name || "",
+          email: userData.email || "",
           interests: userData.interests || [],
         });
       } catch (error) {
-        setError(error.message);
+        toast.error("Failed to load profile", error);
         navigate("/login");
       } finally {
         setLoading(false);
@@ -75,31 +79,65 @@ const Profile = () => {
     fetchUserData();
   }, [navigate]);
 
+  useEffect(() => {
+    if (error) {
+      setErrorTimeout(
+        setTimeout(() => {
+          setError("");
+        }, 5000)
+      );
+    } else if (errorTimeout) {
+      clearTimeout(errorTimeout);
+    }
+  }, [error]);
+
   const handleProfileSave = async () => {
     try {
-      const updatedUser = await updateProfile(formData);
+      await updateProfile(formData);
+      const updatedUser = await getUserProfile(); // Refetch full user data
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
       setIsEditingProfile(false);
       setError("");
+      toast.success("Profile updated successfully");
     } catch (error) {
-      setError(error.message);
+      setError(error.message || "Failed to update profile");
+      toast.error("Failed to update profile");
     }
   };
 
   const handlePasswordSave = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmNewPassword) {
+      setError("Please fill in all password fields");
+      return;
+    }
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
       setError("New passwords do not match");
       return;
     }
+    if (passwordData.newPassword.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
     try {
-      if (user.googleId && !user.hasPassword) {
-        await changePassword({ newPassword: passwordData.newPassword });
+      if (user?.googleId && !user.hasPassword) {
+        const payload = { newPassword: passwordData.newPassword };
+        await addPassword(payload);
+        const updatedUser = await getUserProfile();
+        setUser(updatedUser);
+        toast.success("Password added successfully");
       } else {
-        await changePassword({
+        if (!passwordData.currentPassword) {
+          setError("Current password is required");
+          return;
+        }
+        const payload = {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
-        });
+        };
+        await changePassword(payload);
+        toast.success("Password updated successfully");
       }
       setPasswordData({
         currentPassword: "",
@@ -109,24 +147,22 @@ const Profile = () => {
       setIsEditingPassword(false);
       setError("");
     } catch (error) {
-      setError(error.message);
+      const errorMsg = error.message || "Failed to update password";
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete your account? This cannot be undone."
-      )
-    ) {
-      try {
-        await deleteAccount();
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
-      } catch (error) {
-        setError(error.message);
-      }
+    try {
+      await deleteAccount();
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
+      toast.success("Account deleted successfully");
+    } catch (error) {
+      setError(error.message || "Failed to delete account");
+      toast.error("Failed to delete account");
     }
   };
 
@@ -139,52 +175,48 @@ const Profile = () => {
     }));
   };
 
-  if (loading) return <div className="text-center py-12">Loading...</div>;
+  if (loading || !user) {
+    return (
+      <div className="text-center py-12 text-[var(--text60)]">Loading...</div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-50 to-gray-100">
+    <div className="flex min-h-screen bg-[var(--bg)]">
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       <div className="flex-1 lg:pl-64 p-4 sm:p-6 md:p-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Your Profile
-              </h1>
-              {!isEditingPassword && (
-                <button
-                  onClick={() => setIsEditingProfile(!isEditingProfile)}
-                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md"
-                >
-                  {isEditingProfile ? (
-                    <Save className="h-5 w-5 mr-2" />
-                  ) : (
-                    <Edit className="h-5 w-5 mr-2" />
-                  )}
-                  {isEditingProfile ? "Save" : "Edit Profile"}
-                </button>
-              )}
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="border-b border-[var(--text10)] pb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
+              Your Profile
+            </h1>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+              {error}
             </div>
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-                {error}
-              </div>
-            )}
+          )}
+
+          {/* Profile Info Section */}
+          <div className="border-b border-[var(--text10)] pb-6">
             {isEditingProfile ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
                   <label
                     htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-[var(--text70)]"
                   >
                     Name
                   </label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserIcon className="h-5 w-5 text-gray-400" />
+                      <UserIcon className="h-5 w-5 text-[var(--text50)]" />
                     </div>
                     <input
                       type="text"
@@ -193,7 +225,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      className="pl-10 block w-full rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       required
                     />
                   </div>
@@ -201,13 +233,13 @@ const Profile = () => {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-[var(--text70)]"
                   >
                     Email
                   </label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-[var(--text50)]" />
                     </div>
                     <input
                       type="email"
@@ -216,91 +248,154 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      className="pl-10 block w-full rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       required
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Interests
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {interestsList.map((interest) => (
-                      <button
-                        key={interest}
-                        type="button"
-                        onClick={() => toggleInterest(interest)}
-                        className={`p-2 text-sm rounded-md transition-colors ${
-                          formData.interests.includes(interest)
-                            ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={handleProfileSave}
+                    className="flex items-center px-3 sm:px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--primary85)] transition-colors"
+                  >
+                    <Save className="h-5 w-5 mr-2" />
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setIsEditingProfile(false)}
+                    className="px-3 sm:px-4 py-2 bg-[var(--text60)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--text70)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.name || "User"
+                  )}`}
+                  alt="Profile"
+                  className="h-16 w-16 rounded-full"
+                />
+                <div className="flex-1">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)]">
+                    {user.name || "User"}
+                  </h2>
+                  <p className="text-[var(--text60)]">
+                    {user.email || "email@example.com"}
+                  </p>
+                </div>
+                {!isEditingPassword && (
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    className="flex items-center px-3 sm:px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--primary85)] transition-colors"
+                  >
+                    <Edit className="h-5 w-5 mr-2" />
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Interests Section */}
+          <div className="border-b border-[var(--text10)] pb-6">
+            <h3 className="text-lg font-medium text-[var(--text)] mb-4">
+              Interests
+            </h3>
+            {isEditingProfile ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {interestsList.map((interest) => (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => toggleInterest(interest)}
+                    className={`p-2 text-sm rounded-md transition-colors ${
+                      formData.interests.includes(interest)
+                        ? "bg-[var(--primary5)] text-[var(--primary)] active:bg-[var(--primary20)]"
+                        : "bg-[var(--text5)] text-[var(--text70)] active:bg-[var(--text10)]"
+                    }`}
+                  >
+                    {interest}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div>
+                {user.interests && user.interests.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {user.interests.map((interest, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-[var(--primary5)] text-[var(--primary)] rounded-full text-sm"
                       >
                         {interest}
-                      </button>
+                      </span>
                     ))}
                   </div>
-                </div>
-                <button
-                  onClick={handleProfileSave}
-                  className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  Save Changes
-                </button>
+                ) : (
+                  <p className="text-[var(--text60)]">No interests set</p>
+                )}
               </div>
-            ) : isEditingPassword ? (
-              <div className="space-y-6">
-                {!user.googleId || user.hasPassword ? (
+            )}
+          </div>
+
+          {/* Account Actions Section */}
+          <div className="space-y-6">
+            {isEditingPassword ? (
+              <div className="space-y-4">
+                {user.hasPassword && (
                   <div>
                     <label
                       htmlFor="currentPassword"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-[var(--text70)]"
                     >
                       Current Password
                     </label>
-                    <div className="mt-1 relative">
+                    <div className="mt-1 relative border-[var(--text)] border-2 rounded-xl">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock className="h-5 w-5 text-gray-400" />
+                        <Lock className="h-5 w-5 text-[var(--text50)]" />
                       </div>
                       <input
                         type="password"
                         id="currentPassword"
                         value={passwordData.currentPassword}
+                        style={{ border: "none", outline: "none" }}
                         onChange={(e) =>
                           setPasswordData({
                             ...passwordData,
                             currentPassword: e.target.value,
                           })
                         }
-                        className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        required
+                        className="pl-10 m-2 p-2 block w-full rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       />
                     </div>
                   </div>
-                ) : null}
+                )}
                 <div>
                   <label
                     htmlFor="newPassword"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-[var(--text70)]"
                   >
                     New Password
                   </label>
-                  <div className="mt-1 relative">
+                  <div className="mt-1 relative border-[var(--text)] border-2 rounded-xl">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-[var(--text50)]" />
                     </div>
                     <input
                       type="password"
                       id="newPassword"
                       value={passwordData.newPassword}
+                      style={{ border: "none", outline: "none" }}
                       onChange={(e) =>
                         setPasswordData({
                           ...passwordData,
                           newPassword: e.target.value,
                         })
                       }
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      className="pl-10 m-2 p-2 block w-full rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       required
                     />
                   </div>
@@ -308,106 +403,67 @@ const Profile = () => {
                 <div>
                   <label
                     htmlFor="confirmNewPassword"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-[var(--text70)]"
                   >
                     Confirm New Password
                   </label>
-                  <div className="mt-1 relative">
+                  <div className="mt-1 relative border-[var(--text)] border-2 rounded-xl">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-[var(--text50)]" />
                     </div>
                     <input
                       type="password"
                       id="confirmNewPassword"
                       value={passwordData.confirmNewPassword}
+                      style={{ border: "none", outline: "none" }}
                       onChange={(e) =>
                         setPasswordData({
                           ...passwordData,
                           confirmNewPassword: e.target.value,
                         })
                       }
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      className="pl-10 m-2 p-2 block w-full rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       required
                     />
                   </div>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
                   <button
                     onClick={handlePasswordSave}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--primary85)] transition-colors"
                   >
-                    Save Password
+                    {user.hasPassword ? "Save Password" : "Add Password"}
                   </button>
                   <button
                     onClick={() => setIsEditingPassword(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-[var(--text60)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--text70)] transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user.name || "User"
-                    )}`}
-                    alt="Profile"
-                    className="h-16 w-16 rounded-full"
-                  />
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                      {user.name || "User"}
-                    </h2>
-                    <p className="text-gray-600">
-                      {user.email || "email@example.com"}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Interests
-                  </h3>
-                  {user.interests && user.interests.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {user.interests.map((interest, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm"
-                        >
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">No interests set</p>
-                  )}
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
-                  <button
-                    onClick={() => setIsEditingPassword(true)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                  >
-                    {user.googleId && !user.hasPassword
-                      ? "Add Password"
-                      : "Change Password"}
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5 inline mr-2" />
-                    Delete Account
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsEditingPassword(true)}
+                  className="px-3 sm:px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--primary85)] transition-colors"
+                >
+                  {user.hasPassword ? "Change Password" : "Add Password"}
+                </button>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="flex items-center px-3 sm:px-4 py-2 bg-red-600 text-white rounded-md active:bg-red-700 transition-colors"
+                >
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Delete Account
+                </button>
               </div>
             )}
           </div>
         </div>
         <button
           onClick={() => setIsAIModalOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-colors z-40"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-[var(--primary)] text-[var(--primarycontrast)] p-3 sm:p-4 rounded-full active:bg-[var(--primary85)] transition-colors z-40"
         >
           <Bot className="h-6 w-6" />
         </button>
@@ -416,6 +472,12 @@ const Profile = () => {
         isOpen={isAIModalOpen}
         onClose={() => setIsAIModalOpen(false)}
         userInterests={user.interests || []}
+      />
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        itemType="account"
       />
     </div>
   );

@@ -1,3 +1,4 @@
+// backend/controllers/aiController.js
 const axios = require("axios");
 
 const AI_API_URL = "http://localhost:1234/v1"; // LM Studio local server

@@ -1,7 +1,7 @@
-// frontend/src/components/GroupRoom.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Users, Settings, Bot } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 import {
   fetchUserGroups,
   removeMember,
@@ -40,7 +40,7 @@ const GroupRoom = () => {
         const memberDetails = await getGroupMembers(id);
         setMembers(memberDetails);
       } catch (error) {
-        console.error("Failed to load group or members:", error);
+        toast.error("Failed to load group", error);
         navigate("/groups");
       } finally {
         setLoading(false);
@@ -50,26 +50,24 @@ const GroupRoom = () => {
   }, [id, navigate]);
 
   const handleRemoveMember = async (memberId) => {
-    if (window.confirm("Remove this member temporarily?")) {
-      try {
-        const updatedGroup = await removeMember(group.groupId, memberId);
-        setGroup(updatedGroup);
-        setMembers(members.filter((m) => m.userId._id !== memberId));
-      } catch (error) {
-        console.error("Failed to remove member:", error);
-      }
+    try {
+      const updatedGroup = await removeMember(group.groupId, memberId);
+      setGroup(updatedGroup);
+      setMembers(members.filter((m) => m.userId?._id !== memberId));
+      toast.success("Member removed successfully");
+    } catch (error) {
+      toast.error(error.message || "Failed to remove member");
     }
   };
 
   const handleBlockMember = async (memberId) => {
-    if (window.confirm("Block this member permanently?")) {
-      try {
-        const updatedGroup = await blockMember(group.groupId, memberId);
-        setGroup(updatedGroup);
-        setMembers(members.filter((m) => m.userId._id !== memberId));
-      } catch (error) {
-        console.error("Failed to block member:", error);
-      }
+    try {
+      const updatedGroup = await blockMember(group.groupId, memberId);
+      setGroup(updatedGroup);
+      setMembers(members.filter((m) => m.userId?._id !== memberId));
+      toast.success("Member blocked successfully");
+    } catch (error) {
+      toast.error(error.message || "Failed to block member");
     }
   };
 
@@ -82,35 +80,41 @@ const GroupRoom = () => {
       );
       setGroup(updatedGroup);
       setMembers(updatedGroup.members);
+      toast.success("Member role updated successfully");
     } catch (error) {
-      console.error("Failed to update role:", error);
+      toast.error(error.message || "Failed to update role");
     }
   };
 
-  if (loading) return <div className="text-center py-12">Loading...</div>;
+  if (loading)
+    return (
+      <div className="text-center py-12 text-[var(--text)]">Loading...</div>
+    );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-50 to-gray-100">
+    <div className="flex min-h-screen bg-[var(--bg)]">
+      <Toaster position="top-right" />
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       <div className="flex-1 lg:pl-64 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="bg-[var(--bg)] rounded-xl border border-[var(--text20)] p-6 mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <div className="text-center sm:text-left mb-4 sm:mb-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
                   {group?.name || "Study Group"}
                 </h1>
-                <p className="text-gray-600 text-sm sm:text-base">
+                <p className="text-[var(--text60)] text-sm sm:text-base">
                   Group ID: {group?.groupId || id}
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowMembers(true)}
-                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md"
+                  className="flex items-center px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-lg active:bg-[var(--primary85)] transition-colors"
+                  aria-label="View group members"
                 >
                   <Users className="h-5 w-5 mr-2" />
                   View Members
@@ -118,7 +122,8 @@ const GroupRoom = () => {
                 {isHost && (
                   <button
                     onClick={() => navigate("/groups")}
-                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md"
+                    className="flex items-center px-4 py-2 bg-[var(--text60)] text-[var(--primarycontrast)] rounded-lg active:bg-[var(--text70)] transition-colors"
+                    aria-label="Group settings"
                   >
                     <Settings className="h-5 w-5 mr-2" />
                     Settings
@@ -138,73 +143,95 @@ const GroupRoom = () => {
             </div>
           </div>
           {showMembers && group && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div
+              className="fixed inset-0 bg-[var(--text20)] flex items-center justify-center z-50"
+              style={{
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(4px)",
+              }}
+            >
+              <div className="bg-[var(--bg)] rounded-lg w-full max-w-md p-6 border border-[var(--text20)]">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-[var(--text)]">
                     Group Members
                   </h3>
                   <button
                     onClick={() => setShowMembers(false)}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-3xl text-[var(--text60)] hover:text-[var(--text)]"
+                    aria-label="Close members list"
                   >
                     ×
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {members.map((member) => (
-                    <div
-                      key={member.userId}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            member.username
-                          )}`}
-                          alt={member.username}
-                          className="h-10 w-10 rounded-full"
-                        />
-                        <div>
-                          <span className="text-gray-900">
-                            {member.username}
-                          </span>
-                          <p className="text-sm text-gray-500">{member.role}</p>
-                        </div>
-                      </div>
-                      {group.host === currentUser.id &&
-                        member.userId !== currentUser.id && (
-                          <div className="flex space-x-2">
-                            <select
-                              value={member.role}
-                              onChange={(e) =>
-                                handleRoleChange(member.userId, e.target.value)
-                              }
-                              className="text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="moderator">Moderator</option>
-                              <option value="member">Member</option>
-                            </select>
-                            <button
-                              onClick={() =>
-                                handleRemoveMember(member.userId._id)
-                              }
-                              className="text-sm text-orange-600 hover:text-orange-700"
-                            >
-                              Remove
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleBlockMember(member.userId._id)
-                              }
-                              className="text-sm text-red-600 hover:text-red-700"
-                            >
-                              Block
-                            </button>
+                  {members.map((member) => {
+                    if (!member.userId) {
+                      return null;
+                    }
+                    const displayName =
+                      member.userId?.name || member.username || "Unknown";
+                    return (
+                      <div
+                        key={member._id}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              displayName
+                            )}`}
+                            alt={displayName}
+                            className="h-10 w-10 rounded-full"
+                          />
+                          <div>
+                            <span className="text-[var(--text)]">
+                              {displayName}
+                            </span>
+                            <p className="text-sm text-[var(--text60)] capitalize">
+                              {member.role}
+                            </p>
                           </div>
-                        )}
-                    </div>
-                  ))}
+                        </div>
+                        {group.host === currentUser.id &&
+                          member.userId._id !== currentUser.id && (
+                            <div className="flex space-x-2">
+                              <select
+                                value={member.role}
+                                onChange={(e) =>
+                                  handleRoleChange(
+                                    member.userId._id,
+                                    e.target.value
+                                  )
+                                }
+                                className="text-sm border-[var(--text20)] rounded-md focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                aria-label={`Change role for ${displayName}`}
+                              >
+                                <option value="moderator">Moderator</option>
+                                <option value="member">Member</option>
+                              </select>
+                              <button
+                                onClick={() =>
+                                  handleRemoveMember(member.userId._id)
+                                }
+                                className="text-sm text-[var(--warning)] hover:text-[var(--warning-text)]"
+                                aria-label={`Remove ${displayName}`}
+                              >
+                                Remove
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleBlockMember(member.userId._id)
+                                }
+                                className="text-sm text-[var(--error)] hover:text-[var(--error-text)]"
+                                aria-label={`Block ${displayName}`}
+                              >
+                                Block
+                              </button>
+                            </div>
+                          )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -212,7 +239,8 @@ const GroupRoom = () => {
         </div>
         <button
           onClick={() => setIsAIModalOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-colors z-40"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-[var(--primary)] text-[var(--primarycontrast)] p-4 rounded-full active:bg-[var(--primary85)] transition-colors z-40"
+          aria-label="Open AI assistant"
         >
           <Bot className="h-6 w-6" />
         </button>

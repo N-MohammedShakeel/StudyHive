@@ -1,4 +1,3 @@
-// frontend/src/pages/Login.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, LogIn } from "lucide-react";
@@ -31,17 +30,20 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md bg-[var(--bg)] rounded-xl shadow-lg p-8 space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your StudyHive account
+          <h2 className="text-3xl font-extrabold text-[var(--text)]">
+            Welcome Back to{" "}
+            <span className="text-[var(--primary)]">StudyHive</span>
+          </h2>
+          <p className="mt-2 text-sm text-[var(--text60)]">
+            Sign in to continue your learning journey
           </p>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+          <div className="p-3 bg-[var(--accent30)] text-[var(--text70)] rounded-md text-sm">
             {error}
           </div>
         )}
@@ -50,13 +52,13 @@ const Login = () => {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[var(--text70)]"
             >
               Email address
             </label>
             <div className="mt-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <Mail className="h-5 w-5 text-[var(--accent)]" />
               </div>
               <input
                 id="email"
@@ -65,7 +67,7 @@ const Login = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="m-2 p-2 pl-10 block w-full rounded-md border-[var(--primary5)] bg-[var(--text5)] text-[var(--text)] shadow-sm focus:ring-[var(--accent)] focus:border-[var(--accent)] transition-colors"
                 required
               />
             </div>
@@ -74,13 +76,13 @@ const Login = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[var(--text70)]"
             >
               Password
             </label>
             <div className="mt-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+                <Lock className="h-5 w-5 text-[var(--accent)]" />
               </div>
               <input
                 id="password"
@@ -89,7 +91,7 @@ const Login = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="m-2 p-2 pl-10 block w-full rounded-md border-[var(--primary5)] bg-[var(--text5)] text-[var(--text)] shadow-sm focus:ring-[var(--accent)] focus:border-[var(--accent)] transition-colors"
                 required
               />
             </div>
@@ -97,9 +99,9 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full flex justify-center items-center gap-2 py-2 px-4 border-2 border-transparent rounded-md shadow-sm text-sm font-medium text-[var(--primarycontrast)] bg-[var(--primary)] hover:bg-[var(--accentcontrast)] hover:text-[var(--text)] hover:border-[var(--primary)] transition-colors"
           >
-            <LogIn className="h-5 w-5 mr-2" />
+            <LogIn className="h-5 w-5" />
             Sign In
           </button>
         </form>
@@ -107,22 +109,22 @@ const Login = () => {
         <div className="flex items-center justify-center">
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full flex justify-center items-center gap-2 py-2 px-4 border-2 border-[var(--primary5)] rounded-md shadow-sm text-sm font-medium text-[var(--text70)] bg-[var(--text5)] hover:bg-[var(--accent20)] hover:border-[var(--accent)] transition-colors"
           >
             <img
               src="https://www.google.com/favicon.ico"
               alt="Google"
-              className="h-5 w-5 mr-2"
+              className="h-5 w-5"
             />
             Sign in with Google
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm text-[var(--text60)]">
           Don't have an account?{" "}
           <Link
             to="/signup"
-            className="font-medium text-indigo-600 hover:text-indigo-500"
+            className="font-medium text-[var(--accent)] hover:text-[var(--accent85)] transition-colors"
           >
             Sign up
           </Link>

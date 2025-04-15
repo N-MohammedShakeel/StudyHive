@@ -1,4 +1,3 @@
-// frontend/src/components/AIModal.jsx
 import React, { useState } from "react";
 import { X, Book, Brain, HelpCircle, ArrowLeft } from "lucide-react";
 import {
@@ -12,7 +11,7 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [duration, setDuration] = useState(7); // Default 7 days for study plan
+  const [duration, setDuration] = useState(7);
 
   if (!isOpen) return null;
 
@@ -38,34 +37,34 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col z-50">
-      <div className="bg-white rounded-t-lg shadow-lg p-6 flex-1 flex flex-col h-full w-full">
+    <div className="fixed inset-0 bg-[var(--text20)] flex flex-col z-50">
+      <div className="bg-[var(--bg)] rounded-t-lg p-6 flex-1 flex flex-col h-full w-full">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-[var(--text60)] hover:text-[var(--text)] transition-colors"
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)]">
               AI Assistant
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-[var(--text60)] hover:text-[var(--text)]"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
-        <div className="flex flex-wrap space-x-2 sm:space-x-4 mb-4 border-b border-gray-200">
+        <div className="flex flex-wrap space-x-2 sm:space-x-4 mb-4 border-b border-[var(--text20)]">
           <button
             onClick={() => setActiveTab("summarize")}
             className={`flex items-center px-3 py-2 rounded-t-md ${
               activeTab === "summarize"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[var(--primary)] text-[var(--primarycontrast)]"
+                : "bg-[var(--text20)] text-[var(--text)] hover:bg-[var(--text50)]"
             } transition-colors`}
           >
             <Book className="h-5 w-5 mr-2" />
@@ -75,8 +74,8 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
             onClick={() => setActiveTab("studyPlan")}
             className={`flex items-center px-3 py-2 rounded-t-md ${
               activeTab === "studyPlan"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[var(--primary)] text-[var(--primarycontrast)]"
+                : "bg-[var(--text20)] text-[var(--text)] hover:bg-[var(--text50)]"
             } transition-colors`}
           >
             <Brain className="h-5 w-5 mr-2" />
@@ -86,8 +85,8 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
             onClick={() => setActiveTab("explain")}
             className={`flex items-center px-3 py-2 rounded-t-md ${
               activeTab === "explain"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[var(--primary)] text-[var(--primarycontrast)]"
+                : "bg-[var(--text20)] text-[var(--text)] hover:bg-[var(--text50)]"
             } transition-colors`}
           >
             <HelpCircle className="h-5 w-5 mr-2" />
@@ -100,22 +99,22 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste content to summarize..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 flex-1 resize-none"
+              className="w-full p-3 border border-[var(--text20)] rounded-md focus:ring-[var(--primary)] focus:border-[var(--primary)] flex-1 resize-none"
             />
           )}
           {activeTab === "studyPlan" && (
             <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[var(--text)]">
                 Duration (days)
               </label>
               <input
                 type="number"
                 value={duration}
                 onChange={(e) => setDuration(Math.max(1, e.target.value))}
-                className="w-full sm:w-32 p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full sm:w-32 p-2 border border-[var(--text20)] rounded-md focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                 min="1"
               />
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[var(--text60)]">
                 Based on your interests: {userInterests.join(", ")}
               </p>
             </div>
@@ -126,15 +125,15 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Enter a topic to explain..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-3 border border-[var(--text20)] rounded-md focus:ring-[var(--primary)] focus:border-[var(--primary)]"
             />
           )}
           {output && (
-            <div className="p-4 bg-gray-50 rounded-md flex-1 overflow-y-auto">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="p-4 bg-[var(--text5)] rounded-md flex-1 overflow-y-auto">
+              <h3 className="text-lg font-medium text-[var(--text)] mb-2">
                 Response
               </h3>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+              <p className="text-sm text-[var(--text)] whitespace-pre-wrap">
                 {output}
               </p>
             </div>
@@ -143,10 +142,10 @@ const AIModal = ({ isOpen, onClose, userInterests }) => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className={`w-full py-3 mt-4 rounded-md text-white text-lg font-medium ${
+          className={`w-full py-3 mt-4 rounded-md text-[var(--primarycontrast)] text-lg font-medium ${
             loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
+              ? "bg-[var(--text60)] cursor-not-allowed"
+              : "bg-[var(--primary)] active:bg-[var(--primary85)]"
           } transition-colors`}
         >
           {loading ? "Processing..." : "Send"}

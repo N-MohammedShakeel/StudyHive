@@ -1,4 +1,3 @@
-// backend/controllers/courseController.js
 const Course = require("../models/Course");
 const { drive, STUDYHIVE_FOLDER_ID } = require("../config/googleDrive");
 const stream = require("stream");
@@ -16,32 +15,15 @@ const fetchCourses = async (req, res) => {
 };
 
 const createCourse = async (req, res) => {
-  const { name, description, imageData, link, resourceData, categories, tags } =
+  const { name, description, image, link, resourceData, categories, tags } =
     req.body;
   try {
     const userId = req.user.id;
 
-    let imageUrl = "";
-    if (imageData) {
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(imageData, "base64"));
-      const fileMetadata = {
-        name: `${name}-image.jpg`,
-        parents: [STUDYHIVE_FOLDER_ID],
-      };
-      const media = { mimeType: "image/jpeg", body: bufferStream };
-      const imageResponse = await drive.files.create({
-        resource: fileMetadata,
-        media,
-        fields: "webViewLink",
-      });
-      imageUrl = imageResponse.data.webViewLink;
-    }
-
     let resourceUrl = "";
     if (resourceData) {
       const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(resourceData, "base64"));
+      bufferStream.end(Buffer.from(resourceData.split(",")[1], "base64")); // Remove data:application/pdf;base64,
       const fileMetadata = {
         name: `${name}-resource.pdf`,
         parents: [STUDYHIVE_FOLDER_ID],
@@ -55,10 +37,11 @@ const createCourse = async (req, res) => {
       resourceUrl = resourceResponse.data.webViewLink;
     }
 
+    console.log("Creating course:", { image, resourceUrl }); // Debug
     const course = new Course({
       name,
       description,
-      image: imageUrl,
+      image: image || "", // Use ImgBB URL
       link,
       resource: resourceUrl,
       author: userId,
@@ -66,6 +49,7 @@ const createCourse = async (req, res) => {
       tags,
     });
     await course.save();
+    console.log("Saved course:", { image: course.image }); // Debug
     res.status(201).json(course);
   } catch (error) {
     console.error("Create Course Error:", error);
@@ -80,7 +64,7 @@ const updateCourse = async (req, res) => {
     courseId,
     name,
     description,
-    imageData,
+    image,
     link,
     resourceData,
     categories,
@@ -96,29 +80,14 @@ const updateCourse = async (req, res) => {
 
     if (name) course.name = name;
     if (description) course.description = description;
-    if (link) course.link = link;
+    if (image !== undefined) course.image = image || ""; // Allow empty image
+    if (link !== undefined) course.link = link;
     if (categories) course.categories = categories;
     if (tags) course.tags = tags;
 
-    if (imageData) {
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(imageData, "base64"));
-      const fileMetadata = {
-        name: `${name}-image.jpg`,
-        parents: [STUDYHIVE_FOLDER_ID],
-      };
-      const media = { mimeType: "image/jpeg", body: bufferStream };
-      const imageResponse = await drive.files.create({
-        resource: fileMetadata,
-        media,
-        fields: "webViewLink",
-      });
-      course.image = imageResponse.data.webViewLink;
-    }
-
     if (resourceData) {
       const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(resourceData, "base64"));
+      bufferStream.end(Buffer.from(resourceData.split(",")[1], "base64"));
       const fileMetadata = {
         name: `${name}-resource.pdf`,
         parents: [STUDYHIVE_FOLDER_ID],
@@ -132,6 +101,7 @@ const updateCourse = async (req, res) => {
       course.resource = resourceResponse.data.webViewLink;
     }
 
+    console.log("Updating course:", { image: course.image }); // Debug
     await course.save();
     res.json(course);
   } catch (error) {

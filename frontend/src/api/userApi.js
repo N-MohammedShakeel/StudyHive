@@ -8,7 +8,13 @@ export const getUserProfile = async () => {
       Authorization: `Bearer ${token}`,
     },
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    throw new Error("Invalid response from server", error);
+  }
   if (!response.ok)
     throw new Error(data.message || "Failed to fetch user profile");
   return data;
@@ -24,22 +30,38 @@ export const updateProfile = async (profileData) => {
     },
     body: JSON.stringify(profileData),
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("Invalid response from server");
+  }
   if (!response.ok) throw new Error(data.message || "Failed to update profile");
   return data;
 };
 
-export const addPassword = async (newPassword) => {
+export const addPassword = async ({ newPassword }) => {
+  // Destructure to ensure correct property
   const token = localStorage.getItem("token");
+  if (!newPassword || typeof newPassword !== "string") {
+    throw new Error("New password must be a non-empty string");
+  }
   const response = await fetch(`${API_URL}/add-password`, {
-    method: "PUT",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ newPassword }),
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("Invalid response from server");
+  }
   if (!response.ok) throw new Error(data.message || "Failed to add password");
   return data;
 };
@@ -54,7 +76,13 @@ export const changePassword = async (passwordData) => {
     },
     body: JSON.stringify(passwordData),
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("Invalid response from server");
+  }
   if (!response.ok)
     throw new Error(data.message || "Failed to change password");
   return data;
@@ -68,7 +96,13 @@ export const deleteAccount = async () => {
       Authorization: `Bearer ${token}`,
     },
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("Invalid response from server");
+  }
   if (!response.ok) throw new Error(data.message || "Failed to delete account");
   return data;
 };

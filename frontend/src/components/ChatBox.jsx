@@ -1,4 +1,3 @@
-// frontend/src/components/ChatBox.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { MessageSquare, Trash2, Heart } from "lucide-react";
 import io from "socket.io-client";
@@ -22,7 +21,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
         const fetchedMessages = await getMessages(groupId);
         setMessages(fetchedMessages);
       } catch (error) {
-        console.error("Failed to load messages:", error);
+        console.error(error);
       }
     };
     loadMessages();
@@ -72,7 +71,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
       socket.emit("sendMessage", message);
       setNewMessage("");
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error(error);
     }
   };
 
@@ -81,7 +80,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
       await deleteMessage(messageId);
       socket.emit("deleteMessage", { groupId, messageId });
     } catch (error) {
-      console.error("Failed to delete message:", error);
+      console.error(error);
     }
   };
 
@@ -91,17 +90,17 @@ const ChatBox = ({ groupId, currentUserId }) => {
       const data = await reactToMessage(messageId, reaction);
       socket.emit("reactToMessage", { groupId, ...data });
     } catch (error) {
-      console.error("Failed to react to message:", error);
+      console.error(error);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-[var(--bg)] rounded-lg border border-[var(--text20)] p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Discussion</h2>
-        <MessageSquare className="h-5 w-5 text-indigo-600" />
+        <h2 className="text-lg font-semibold text-[var(--text)]">Discussion</h2>
+        <MessageSquare className="h-5 w-5 text-[var(--primary)]" />
       </div>
-      <div className="h-96 bg-gray-50 rounded-lg p-4 overflow-y-auto">
+      <div className="h-96 bg-[var(--text5)] rounded-lg p-4 overflow-y-auto">
         {messages.length > 0 ? (
           messages.map((message) => (
             <div
@@ -115,35 +114,35 @@ const ChatBox = ({ groupId, currentUserId }) => {
               <div
                 className={`max-w-xs p-3 rounded-lg ${
                   message.userId._id === currentUserId
-                    ? "bg-indigo-100 text-indigo-900"
-                    : "bg-gray-200 text-gray-900"
+                    ? "bg-[var(--primary5)] text-[var(--primary)]"
+                    : "bg-[var(--text20)] text-[var(--text)]"
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[var(--text60)] mt-1">
                   {message.userId.name}
                 </p>
                 <div className="flex items-center space-x-2 mt-1">
                   {message.reactions.length > 0 && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[var(--text60)]">
                       {
                         message.reactions.filter((r) => r.reaction === "like")
                           .length
                       }{" "}
-                      <Heart className="h-3 w-3 inline text-red-500" />
+                      <Heart className="h-3 w-3 inline text-[var(--error)]" />
                     </span>
                   )}
                   {message.userId._id === currentUserId && (
                     <button
                       onClick={() => handleDeleteMessage(message._id)}
-                      className="text-xs text-red-600 hover:text-red-700"
+                      className="text-xs text-[var(--error)] hover:text-[var(--error-text)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
                   <button
                     onClick={() => handleReactToMessage(message._id)}
-                    className="text-xs text-gray-500 hover:text-red-500"
+                    className="text-xs text-[var(--text60)] hover:text-[var(--error)]"
                   >
                     <Heart className="h-4 w-4" />
                   </button>
@@ -152,7 +151,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-500 text-center">No messages yet</p>
+          <p className="text-[var(--text60)] text-center">No messages yet</p>
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -162,7 +161,7 @@ const ChatBox = ({ groupId, currentUserId }) => {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type your message..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-4 py-2 border border-[var(--text20)] rounded-md focus:ring-[var(--primary)] focus:border-[var(--primary)]"
         />
       </form>
     </div>

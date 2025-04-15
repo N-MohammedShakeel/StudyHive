@@ -1,4 +1,5 @@
 // backend/controllers/userController.js
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 const getUserProfile = async (req, res) => {
@@ -14,7 +15,7 @@ const getUserProfile = async (req, res) => {
       email: user.email,
       interests: user.interests,
       googleId: user.googleId,
-      hasPassword: !!user.password, // True if password exists, false if null
+      hasPassword: !!user.password,
     };
     res.json(userData);
   } catch (error) {
@@ -52,52 +53,94 @@ const updateProfile = async (req, res) => {
 };
 
 const addPassword = async (req, res) => {
-  const { newPassword } = req.body;
   try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.password)
+    const { newPassword } = req.body;
+    console.log("addPassword received:", {
+      newPassword,
+      type: typeof newPassword,
+    });
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (
+      !newPassword ||
+      typeof newPassword !== "string" ||
+      newPassword.trim() === ""
+    ) {
       return res
         .status(400)
-        .json({
-          message: "Password already exists, use change password instead",
-        });
+        .json({ message: "New password must be a non-empty string" });
+    }
+    if (newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters long" });
+    }
 
-    user.password = newPassword;
+    user.password = newPassword; // Set plain password
     await user.save();
-    res.json({ message: "Password added successfully" });
+    const savedUser = await User.findById(req.user.id);
+    console.log("Saved user password hash:", savedUser.password); // Log hash
+    return res.status(200).json({ message: "Password added successfully" });
   } catch (error) {
-    console.error("Add Password Error:", error);
-    res
+    console.error("Add password error:", error);
+    return res
       .status(500)
-      .json({ message: "Error adding password", error: error.message });
+      .json({ message: "Server error", error: error.message });
   }
 };
 
 const changePassword = async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
   try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (!user.password)
+    const { currentPassword, newPassword } = req.body;
+    console.log("changePassword received:", {
+      currentPassword,
+      newPassword,
+      currentPasswordLength: currentPassword?.length,
+    });
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Current and new passwords are required" });
+    }
+    if (!user.password) {
       return res
         .status(400)
         .json({ message: "No password set, use add password instead" });
-
+    }
     const isMatch = await user.comparePassword(currentPassword);
-    if (!isMatch)
+    console.log("comparePassword result:", isMatch);
+    if (!isMatch) {
       return res.status(400).json({ message: "Current password is incorrect" });
-
+    }
+    if (typeof newPassword !== "string" || newPassword.trim() === "") {
+      return res
+        .status(400)
+        .json({ message: "New password must be a non-empty string" });
+    }
+    if (newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters long" });
+    }
     user.password = newPassword;
     await user.save();
-    res.json({ message: "Password updated successfully" });
+    const savedUser = await User.findById(req.user.id);
+    console.log("Saved user password hash:", savedUser.password); // Log hash
+    return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error("Change Password Error:", error);
-    res
+    console.error("Change password error:", error);
+    return res
       .status(500)
-      .json({ message: "Error changing password", error: error.message });
+      .json({ message: "Server error", error: error.message });
   }
 };
 

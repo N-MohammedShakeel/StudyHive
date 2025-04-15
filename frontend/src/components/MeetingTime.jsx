@@ -1,4 +1,3 @@
-// frontend/src/components/MeetingTime.jsx
 import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -21,7 +20,7 @@ const MeetingTime = ({ groupId, isHost }) => {
         const fetchedMeetings = await getMeetings(groupId);
         setMeetings(fetchedMeetings);
       } catch (error) {
-        console.error("Failed to load meetings:", error);
+        console.error(error);
       }
     };
     loadMeetings();
@@ -36,7 +35,7 @@ const MeetingTime = ({ groupId, isHost }) => {
       setNewMeetingDate("");
       setNewMeetingTime("");
     } catch (error) {
-      console.error("Failed to add meeting:", error);
+      console.error(error);
     }
   };
 
@@ -52,7 +51,7 @@ const MeetingTime = ({ groupId, isHost }) => {
       setNewMeetingDate("");
       setNewMeetingTime("");
     } catch (error) {
-      console.error("Failed to edit meeting:", error);
+      console.error(error);
     }
   };
 
@@ -61,24 +60,26 @@ const MeetingTime = ({ groupId, isHost }) => {
       await deleteMeeting(meetingId);
       setMeetings(meetings.filter((m) => m._id !== meetingId));
     } catch (error) {
-      console.error("Failed to delete meeting:", error);
+      console.error(error);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-[var(--bg)] rounded-lg border border-[var(--text20)] p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Meeting Time</h2>
-        <Calendar className="h-5 w-5 text-indigo-600" />
+        <h2 className="text-lg font-semibold text-[var(--text)]">
+          Meeting Time
+        </h2>
+        <Calendar className="h-5 w-5 text-[var(--primary)]" />
       </div>
       <div className="space-y-2">
         {meetings.length > 0 ? (
           meetings.map((meeting) => (
             <div
               key={meeting._id}
-              className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+              className="flex items-center justify-between p-2 bg-[var(--text5)] rounded-md"
             >
-              <span className="text-sm text-gray-900">
+              <span className="text-sm text-[var(--text)]">
                 {format(new Date(meeting.dateTime), "MMMM d, yyyy h:mm a")}
               </span>
               {isHost && (
@@ -93,13 +94,13 @@ const MeetingTime = ({ groupId, isHost }) => {
                         format(new Date(meeting.dateTime), "HH:mm")
                       );
                     }}
-                    className="text-indigo-600 hover:text-indigo-700"
+                    className="text-[var(--primary)] hover:text-[var(--primary85)]"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteMeeting(meeting._id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-[var(--error)] hover:text-[var(--error-text)]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -108,7 +109,7 @@ const MeetingTime = ({ groupId, isHost }) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-500">No meetings scheduled</p>
+          <p className="text-[var(--text60)]">No meetings scheduled</p>
         )}
       </div>
       {isHost && (
@@ -118,13 +119,13 @@ const MeetingTime = ({ groupId, isHost }) => {
               type="date"
               value={newMeetingDate}
               onChange={(e) => setNewMeetingDate(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="m-1 p-1 rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
             />
             <input
               type="time"
               value={newMeetingTime}
               onChange={(e) => setNewMeetingTime(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="m-1 p-1 rounded-md border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
             />
           </div>
           <button
@@ -133,7 +134,7 @@ const MeetingTime = ({ groupId, isHost }) => {
                 ? () => handleEditMeeting(editingMeeting)
                 : handleAddMeeting
             }
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+            className="flex items-center px-4 py-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-md active:bg-[var(--primary85)] transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
             {editingMeeting ? "Update Meeting" : "Add Meeting"}

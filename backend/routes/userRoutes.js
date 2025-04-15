@@ -10,9 +10,9 @@ const {
 } = require("../controllers/userController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-router.get("/profile", authMiddleware, getUserProfile); // New
+router.get("/profile", authMiddleware, getUserProfile);
 router.put("/profile", authMiddleware, updateProfile);
-router.put("/add-password", authMiddleware, addPassword);
+router.post("/add-password", authMiddleware, addPassword);
 router.put("/password", authMiddleware, changePassword);
 router.delete("/account", authMiddleware, deleteAccount);
 

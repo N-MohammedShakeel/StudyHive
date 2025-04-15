@@ -1,4 +1,3 @@
-// frontend/src/components/Calendar.jsx
 import React, { useState } from "react";
 import {
   format,
@@ -22,17 +21,15 @@ import {
 
 const Calendar = ({ events, onEventClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("month"); // 'week' or 'month'
+  const [viewMode, setViewMode] = useState("month");
 
-  // Calculate days based on view mode
   const getDays = () => {
     if (viewMode === "month") {
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
       return eachDayOfInterval({ start: monthStart, end: monthEnd });
     } else {
-      // week view
-      const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday start
+      const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
       const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
       return eachDayOfInterval({ start: weekStart, end: weekEnd });
     }
@@ -41,14 +38,30 @@ const Calendar = ({ events, onEventClick }) => {
   const days = getDays();
 
   const getEventsForDay = (date) => {
-    return events.filter((event) => {
-      const eventDate = new Date(event.dueDate);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
+    return (events || []).filter((event) => {
+      try {
+        const eventDate = new Date(event.dueDate);
+        return (
+          eventDate.getDate() === date.getDate() &&
+          eventDate.getMonth() === date.getMonth() &&
+          eventDate.getFullYear() === date.getFullYear()
+        );
+      } catch {
+        return false;
+      }
     });
+  };
+
+  const getEventStyle = (event) => {
+    const statusStyles = {
+      not_started:
+        "border-l-4 border-[var(--error)] bg-[var(--error5)] text-[var(--error-text)]",
+      in_progress:
+        "border-l-4 border-[var(--warning)] bg-[var(--warning5)] text-[var(--warning-text)]",
+      completed:
+        "border-l-4 border-[var(--success)] bg-[var(--success5)] text-[var(--success-text)]",
+    };
+    return statusStyles[event.status] || "bg-[var(--text5)] text-[var(--text)]";
   };
 
   const handlePrev = () => {
@@ -72,37 +85,39 @@ const Calendar = ({ events, onEventClick }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+    <div className="bg-[var(--bg)] rounded-lg border border-[var(--text20)]">
+      <div className="p-4 border-b border-[var(--text20)] flex justify-between items-center">
         <button
           onClick={handlePrev}
-          className="p-2 text-gray-600 hover:text-indigo-600"
+          className="p-2 text-[var(--text60)] hover:text-[var(--primary)]"
+          aria-label="Previous period"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-[var(--text)]">
             {format(currentDate, "MMMM yyyy")}
           </h2>
           <button
             onClick={toggleViewMode}
-            className="px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100"
+            className="px-3 py-1 text-sm bg-[var(--primary5)] text-[var(--primary)] rounded-md hover:bg-[var(--primary20)]"
           >
             {viewMode === "month" ? "Week View" : "Month View"}
           </button>
         </div>
         <button
           onClick={handleNext}
-          className="p-2 text-gray-600 hover:text-indigo-600"
+          className="p-2 text-[var(--text60)] hover:text-[var(--primary)]"
+          aria-label="Next period"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-px bg-gray-200">
+      <div className="grid grid-cols-7 gap-px bg-[var(--text20)]">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
-            className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-500"
+            className="bg-[var(--text5)] p-2 text-center text-sm font-medium text-[var(--text60)]"
           >
             {day}
           </div>
@@ -112,17 +127,17 @@ const Calendar = ({ events, onEventClick }) => {
           return (
             <div
               key={day.toString()}
-              className={`bg-white p-2 min-h-[100px] ${
+              className={`bg-[var(--bg)] p-2 min-h-[100px] ${
                 viewMode === "month" && !isSameMonth(day, currentDate)
-                  ? "text-gray-400"
+                  ? "text-[var(--text60)]"
                   : isToday(day)
-                  ? "bg-indigo-50"
+                  ? "bg-[var(--primary5)]"
                   : ""
               }`}
             >
               <span
                 className={`text-sm ${
-                  isToday(day) ? "font-bold text-indigo-600" : ""
+                  isToday(day) ? "font-bold text-[var(--primary)]" : ""
                 }`}
               >
                 {format(day, "d")}
@@ -132,12 +147,11 @@ const Calendar = ({ events, onEventClick }) => {
                   <button
                     key={event._id}
                     onClick={() => onEventClick(event)}
-                    className={`w-full text-left text-xs p-1 rounded truncate ${
-                      event.type === "exam"
-                        ? "bg-red-100 text-red-800"
-                        : event.type === "homework"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-green-100 text-green-800"
+                    className={`w-full text-left text-xs p-1 rounded truncate ${getEventStyle(
+                      event
+                    )}`}
+                    aria-label={`${event.name}, status: ${
+                      event.status || "unknown"
                     }`}
                   >
                     {event.name}

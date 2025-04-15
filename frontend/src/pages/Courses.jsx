@@ -1,4 +1,3 @@
-// frontend/src/pages/Courses.jsx
 import React, { useState, useEffect } from "react";
 import {
   fetchCourses,
@@ -10,6 +9,8 @@ import Sidebar from "../components/Common/Sidebar";
 import { BookOpen, Bot, Search, Edit, Trash2 } from "lucide-react";
 import AIModal from "../components/AIModal";
 import CourseModal from "../components/CourseModal";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import toast, { Toaster } from "react-hot-toast";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -17,6 +18,8 @@ const Courses = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -29,7 +32,7 @@ const Courses = () => {
         const data = await fetchCourses();
         setCourses(data);
       } catch (error) {
-        console.error("Failed to load courses:", error);
+        toast.error("Failed to load courses");
       } finally {
         setLoading(false);
       }
@@ -41,8 +44,9 @@ const Courses = () => {
     try {
       const newCourse = await createCourse(courseData);
       setCourses([...courses, newCourse]);
+      toast.success("Course created successfully");
     } catch (error) {
-      console.error("Failed to create course:", error);
+      toast.error("Failed to create course");
     }
   };
 
@@ -53,26 +57,36 @@ const Courses = () => {
         courses.map((c) => (c._id === updatedCourse._id ? updatedCourse : c))
       );
       setEditingCourse(null);
+      toast.success("Course updated successfully");
     } catch (error) {
-      console.error("Failed to update course:", error);
+      toast.error("Failed to update course");
     }
   };
 
-  const handleDeleteCourse = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await deleteCourse(courseId);
-        setCourses(courses.filter((c) => c._id !== courseId));
-      } catch (error) {
-        console.error("Failed to delete course:", error);
-      }
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    try {
+      await deleteCourse(courseToDelete);
+      setCourses(courses.filter((c) => c._id !== courseToDelete));
+      setIsDeleteModalOpen(false);
+      setCourseToDelete(null);
+      toast.success("Course deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete course");
     }
+  };
+
+  const openDeleteModal = (courseId) => {
+    setCourseToDelete(courseId);
+    setIsDeleteModalOpen(true);
   };
 
   const filteredCourses = courses.filter(
     (course) =>
       (course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.author.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        course.author?.name
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())) &&
       (filterCategory ? course.categories.includes(filterCategory) : true)
   );
 
@@ -81,37 +95,42 @@ const Courses = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-50 to-gray-100">
+    <div className="flex min-h-screen bg-[var(--bg)]">
+      <Toaster position="top-right" />
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       <div className="flex-1 lg:pl-64 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="mb-8 p-5 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-xl bg-[var(--bg)] border border-[var(--text20)]">
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
                 Courses
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-[var(--text60)] text-sm sm:text-base">
                 Share and explore community courses
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name or author..."
-                  className="pl-10 w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="m-2 p-2 pl-10 w-full rounded-lg border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                />
+                <Search
+                  className="absolute left-5 top-4 transform h-5 w-5 text-[var(--text60)]"
+                  viewBox="0 0 24 24"
                 />
               </div>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full sm:w-40 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="m-2 p-2 sm:w-40 rounded-lg border-[var(--text20)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                aria-label="Filter by category"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -122,7 +141,7 @@ const Courses = () => {
               </select>
               <button
                 onClick={() => setIsCourseModalOpen(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md"
+                className="px-4 m-2 p-2 bg-[var(--primary)] text-[var(--primarycontrast)] rounded-lg active:bg-[var(--primary85)] transition-colors"
               >
                 Add Course
               </button>
@@ -131,7 +150,10 @@ const Courses = () => {
           {loading ? (
             <div className="animate-pulse grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-72 bg-gray-200 rounded-xl"></div>
+                <div
+                  key={i}
+                  className="h-72 bg-[var(--text20)] rounded-xl"
+                ></div>
               ))}
             </div>
           ) : filteredCourses.length > 0 ? (
@@ -139,31 +161,38 @@ const Courses = () => {
               {filteredCourses.map((course) => (
                 <div
                   key={course._id}
-                  className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-shadow"
+                  className="bg-[var(--bg)] rounded-xl border border-[var(--text20)] p-5 transition-all"
                 >
                   <div className="flex items-center space-x-3 mb-3">
-                    {course.image ? (
+                    {course.image && course.image !== "" ? (
                       <img
                         src={course.image}
                         alt={course.name}
                         className="h-12 w-12 rounded-md object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "block";
+                        }}
                       />
                     ) : (
-                      <BookOpen className="h-6 w-6 text-indigo-600" />
+                      <BookOpen
+                        className="h-6 w-6 text-[var(--primary)]"
+                        style={{ display: course.image ? "none" : "block" }}
+                      />
                     )}
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">
+                      <h3 className="font-semibold text-[var(--text)] text-lg">
                         {course.name}
                       </h3>
-                      {/* <p className="text-sm text-gray-500">
-                        By {course.author.name}
-                      </p> */}
+                      <p className="text-sm text-[var(--text60)]">
+                        By {course.author?.name || "Unknown"}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="text-sm text-[var(--text60)] line-clamp-2">
                     {course.description}
                   </p>
-                  <div className="mt-2 text-sm text-gray-500">
+                  <div className="mt-2 text-sm text-[var(--text60)]">
                     <p>
                       <strong>Categories:</strong>{" "}
                       {course.categories.join(", ")}
@@ -173,14 +202,14 @@ const Courses = () => {
                     </p>
                   </div>
                   <div className="mt-4 flex space-x-2">
-                    {course.link && (
+                    {course.image && course.image !== "" && (
                       <a
-                        href={course.link}
+                        href={course.image}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 text-sm"
+                        className="px-3 py-1 bg-[var(--primary5)] text-[var(--primary)] rounded-md hover:bg-[var(--primary20)] text-sm"
                       >
-                        Link
+                        Image
                       </a>
                     )}
                     {course.resource && (
@@ -188,26 +217,28 @@ const Courses = () => {
                         href={course.resource}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1 bg-green-100 text-green-600 rounded-md hover:bg-green-200 text-sm"
+                        className="px-3 py-1 bg-[var(--success5)] text-[var(--success-text)] rounded-md hover:bg-[var(--success)] hover:bg-opacity-20 text-sm"
                       >
                         Resource
                       </a>
                     )}
-                    {course.author === user.id && (
+                    {course.author?._id === user.id && (
                       <>
                         <button
                           onClick={() => {
                             setEditingCourse(course);
                             setIsCourseModalOpen(true);
                           }}
-                          className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-md hover:bg-indigo-200 text-sm"
+                          className="px-3 py-1 bg-[var(--primary5)] text-[var(--primary)] rounded-md hover:bg-[var(--primary20)] text-sm"
+                          aria-label={`Edit ${course.name}`}
                         >
                           <Edit className="h-4 w-4 inline mr-1" />
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteCourse(course._id)}
-                          className="px-3 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 text-sm"
+                          onClick={() => openDeleteModal(course._id)}
+                          className="px-3 py-1 bg-[var(--error5)] text-[var(--error-text)] rounded-md hover:bg-[var(--error)] hover:bg-opacity-20 text-sm"
+                          aria-label={`Delete ${course.name}`}
                         >
                           <Trash2 className="h-4 w-4 inline mr-1" />
                           Delete
@@ -219,12 +250,12 @@ const Courses = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-xl shadow-md">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="text-center py-12 bg-[var(--bg)] rounded-xl border border-[var(--text20)]">
+              <BookOpen className="h-12 w-12 text-[var(--text60)] mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-[var(--text)] mb-2">
                 No courses found
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-[var(--text60)] text-sm">
                 Add a course or adjust your search/filter
               </p>
             </div>
@@ -232,7 +263,8 @@ const Courses = () => {
         </div>
         <button
           onClick={() => setIsAIModalOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-colors z-40"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-[var(--primary)] text-[var(--primarycontrast)] p-4 rounded-full active:bg-[var(--primary85)] transition-colors z-40"
+          aria-label="Open AI assistant"
         >
           <Bot className="h-6 w-6" />
         </button>
@@ -250,6 +282,12 @@ const Courses = () => {
         isOpen={isAIModalOpen}
         onClose={() => setIsAIModalOpen(false)}
         userInterests={user.interests || []}
+      />
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteCourse}
+        itemType="course"
       />
     </div>
   );
