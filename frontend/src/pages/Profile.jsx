@@ -19,7 +19,7 @@ import {
 import Sidebar from "../components/Common/Sidebar";
 import AIModal from "../components/AIModal";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -183,6 +183,7 @@ const Profile = () => {
 
   return (
     <div className="flex min-h-screen bg-[var(--bg)]">
+      <Toaster position="top-right" />
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}

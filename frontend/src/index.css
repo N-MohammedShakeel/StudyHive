@@ -1,38 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #006778;
-  --secondary: #0093ab;
-  --accent: #00afc1;
-  --text: #000f12;
-  --bg: #f2f7f8;
-  --primarycontrast: #ffffff;
-  --accentcontrast: #ffffff;
-  --text5: #e6e9eb;
-  --text10: #d1d5d8;
-  --text20: #a3a9ad;
-  --text50: #667175;
-  --text60: #4d575c;
-  --text70: #333d42;
-  --primary5: #e6f0f2;
-  --primary20: #99c2c9;
-  --primary85: #33919e;
-  --accent20: #b3e4eb;
+  --accent20: #b3d8eb;
   --accent30: #99dee7;
-  --accent85: #33bfd0;
+  --accent85: #33a6d0;
 
   --bg: #f5f5f5; /* Light background */
+  --bg: #f2f7f8;
   --text: #1a202c; /* Dark text */
+  --text5: #e6e9eb;
   --text10: rgba(26, 32, 44, 0.1);
   --text20: rgba(26, 32, 44, 0.2);
   --text50: rgba(26, 32, 44, 0.5);
   --text60: rgba(26, 32, 44, 0.6);
   --text70: rgba(26, 32, 44, 0.7);
+  --accent: #5890d0;
   --primary: #4a90e2; /* Blue for buttons, icons */
   --primary5: rgba(74, 144, 226, 0.05);
   --primary20: rgba(74, 144, 226, 0.2);
   --primary85: rgba(74, 144, 226, 0.85);
   --primarycontrast: #ffffff;
+  --accentcontrast: #ffffff;
 
   --error: #ef4444; /* Red for not_started, exams */
   --error5: rgba(239, 68, 68, 0.05);

@@ -31,7 +31,7 @@ const Dashboard = () => {
         const fetchedEvents = await fetchEvents();
         setEvents(fetchedEvents || []);
       } catch (error) {
-        toast.error(error.message || "Failed to load events");
+        toast.error("Sign in again " + error);
       } finally {
         setLoading(false);
       }
