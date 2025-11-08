@@ -1,5 +1,4 @@
-Below is a **complete walkthrough of the frontend API layer** (`src/api/*.js`).  
-I’ll break it down **file-by-file**, explain **what each function does**, **how it talks to the backend**, and then give a **big-picture view** of how the whole app works together with the backend you already saw.
+# **Frontend API layer**
 
 ---
 
