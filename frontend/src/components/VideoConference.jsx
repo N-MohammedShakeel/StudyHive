@@ -1,3 +1,4 @@
+// frontend/src/components/VideoConference.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Video } from "lucide-react";
 

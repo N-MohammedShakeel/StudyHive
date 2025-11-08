@@ -1,3 +1,4 @@
+// frontend/src/components/Common/Sidebar.jsx
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {

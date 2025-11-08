@@ -1,3 +1,4 @@
+// frontend/src/components/DeleteConfirmationModal.jsx
 import React from "react";
 
 const DeleteConfirmationModal = ({

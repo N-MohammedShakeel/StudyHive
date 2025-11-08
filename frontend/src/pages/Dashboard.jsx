@@ -1,3 +1,4 @@
+// frontend/src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { format, isToday, isThisWeek } from "date-fns";
 import { Plus, Calendar as CalendarIcon, Bot } from "lucide-react";

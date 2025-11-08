@@ -1,3 +1,4 @@
+// frontend/src/components/ChatBox.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { MessageSquare, Trash2, Heart } from "lucide-react";
 import io from "socket.io-client";

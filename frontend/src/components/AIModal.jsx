@@ -1,3 +1,4 @@
+// frontend/src/components/AIModal.jsx
 import React, { useState } from "react";
 import { X, Book, Brain, HelpCircle, ArrowLeft } from "lucide-react";
 import {

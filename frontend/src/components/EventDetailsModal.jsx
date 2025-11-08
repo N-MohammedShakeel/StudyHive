@@ -1,3 +1,4 @@
+// frontend/src/components/EventDetailsModal.jsx
 import React, { useState, useEffect } from "react";
 import { X, Calendar } from "lucide-react";
 import toast from "react-hot-toast";

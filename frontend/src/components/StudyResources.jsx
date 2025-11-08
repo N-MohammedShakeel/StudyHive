@@ -1,3 +1,4 @@
+// frontend/src/components/StudyResources.jsx
 import React, { useState, useEffect } from "react";
 import { Upload, Download, Trash2 } from "lucide-react";
 import { getFiles, uploadFile, deleteFile } from "../api/fileApi";

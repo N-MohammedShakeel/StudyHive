@@ -1,3 +1,4 @@
+// frontend/src/components/GroupList.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Calendar, BookOpen } from "lucide-react";

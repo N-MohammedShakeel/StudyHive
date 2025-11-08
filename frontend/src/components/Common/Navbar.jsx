@@ -1,3 +1,4 @@
+// frontend/src/components/Common/Navbar.jsx
 import React, { useState } from "react";
 
 const Navbar = () => {

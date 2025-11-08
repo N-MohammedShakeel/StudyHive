@@ -1,3 +1,4 @@
+// frontend/src/components/GroupRoom.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Users, Settings, Bot } from "lucide-react";
@@ -9,12 +10,12 @@ import {
   updateMemberRole,
   getGroupMembers,
 } from "../api/groupApi";
-import Sidebar from "./Common/Sidebar";
-import ChatBox from "./ChatBox";
-import VideoConference from "./VideoConference";
-import StudyResources from "./StudyResources";
-import MeetingTime from "./MeetingTime";
-import AIModal from "./AIModal";
+import Sidebar from "../components/Common/Sidebar";
+import ChatBox from "../components/ChatBox";
+import VideoConference from "../components/VideoConference";
+import StudyResources from "../components/StudyResources";
+import MeetingTime from "../components/MeetingTime";
+import AIModal from "../components/AIModal";
 
 const GroupRoom = () => {
   const { id } = useParams();
